@@ -1,66 +1,102 @@
-# Multiclass Prediction of Thalassemia Disorders Using Machine Learning Models on HPLC Data
+# Multiclass Prediction of Thalassemia Disorders Using Machine Learning Models on CBC Parameters
 
 ## Overview
+This repository contains code and trained machine learning (ML) models for **multiclass classification of thalassemia and related hemoglobinopathies** using **Complete Blood Count (CBC)** parameters derived from **High-Performance Liquid Chromatography (HPLC)**-linked datasets.  
 
-This repository contains code and models for classifying thalassemia and related hemoglobinopathies using machine learning (ML) methods on High-Performance Liquid Chromatography (HPLC) data. The primary goal is to automate the detection of thalassemia carriers, non-carriers, and individuals with other hemoglobin disorders, providing an accessible solution in resource-limited settings.
+The primary goal is to support **automated screening** of:
+- **Thalassemia carriers**
+- **Non-carriers (normal)**
+- **Other hemoglobin disorders**
 
-## Methodology
+This work is designed to be **low-cost and accessible**, especially for **resource-limited settings**.
 
-The approach developed in this project revolves around a series of essential steps:
+---
 
-1. **Data Preprocessing**: 
-   - **Handling Missing Values**: The dataset contains some missing values for features like MCV, MCH, HbA2, and others. These are imputed using the median for numerical features and mode for categorical features (like gender or weakness).
-   - **Outlier Detection**: Outliers are identified using the Z-score method. If values deviate more than 3 standard deviations from the mean, they are replaced with the median value of the feature.
-   - **Data Normalization**: To standardize the range of numerical features, they are scaled between 0 and 1 to facilitate the convergence of certain algorithms, particularly scale-sensitive ones like KNN and SVM.
+## Project Workflow (Methodology)
 
-2. **Feature Selection**:
-   - **Random Forest Feature Importance**: Key features such as HbA2, HbA0, MCV, and MCH are selected based on their importance for the classification task.
-   - **ANOVA F-value**: Features are evaluated based on their ability to distinguish between different classes of thalassemia, using statistical significance.
-   - **Recursive Feature Elimination (RFE)**: This technique is used to recursively remove the least significant features, focusing on the most informative ones.
-   - **SHAP (SHapley Additive exPlanations)**: Used to explain model predictions by showing how each feature contributes to the final prediction.
-   - **Information Gain**: This method assesses how much information each feature provides about the class, contributing to the classification task.
+### 1) Data Preprocessing
+Implemented in: `Data_Preprocessing_All.ipynb`
 
-3. **Data Balancing**: Due to class imbalance (especially for rare thalassemia subtypes), Random Oversampling is employed to duplicate instances from minority classes. This prevents the model from being biased towards the majority class.
+Steps include:
 
-4. **Modeling**:
-   - Various machine learning algorithms are used for thalassemia classification, including:
-     - **Random Forest (RF)**
-     - **Gradient Boosting Classifier (GBC)**
-     - **Support Vector Machine (SVM)**
-     - **K-Nearest Neighbors (KNN)**
-     - **Decision Tree (DT)**
-     - **LightGBM**
-     - **Voting Classifier**
-     - **Multi-layer Perceptron (MLP)**
+**Handling Missing Values**
+- Numerical features (e.g., `MCV`, `MCH`, `RBC`) → **median imputation**
+- Categorical features (e.g., `Gender`, `Weakness`) → **mode imputation**
 
-   - **Hyperparameter Tuning**: Hyperparameters are tuned using `GridSearchCV` to identify the optimal values for each model and improve their performance.
+**Outlier Detection & Handling**
+- Outliers detected via **Z-score**
+- If `|z| > 3`, the value is treated as an outlier and replaced with the **feature median**
 
-5. **Model Evaluation**:
-   - **Metrics**: The models are evaluated using multiple performance metrics including:
-     - Accuracy
-     - F1-score (weighted)
-     - Precision (weighted)
-     - Recall (weighted)
-     - Cross-validation accuracy (5-fold)
-   - **Cross-validation** is used to ensure the model's generalizability and prevent overfitting.
+**Target Label Standardization**
+- Fixes inconsistencies such as extra spaces and mixed capitalization in the `Diagnosis` column
+- Standardizes labels into a consistent naming convention (e.g., `"Normal"`)
 
-![Overview of Methodology](./Pictures/Methodology.png)
+**Data Normalization**
+- Scales numerical features to **[0, 1]**
+- Helpful for scale-sensitive models like **KNN** and **SVM**
 
-## Code Structure
+---
 
-### Data Preprocessing
+### 2) Feature Selection
+Method:
+- **Random Forest Feature Importance**
 
-The preprocessing steps are implemented in the `Data Preprocessing All.ipynb` notebook. It handles tasks such as:
+Selected key features based on an importance threshold of **0.05**, including:
+- `MCV`, `MCH`, `RDWcv`, `RBC`, `HB`, `MCHC`, `Age`, `Present District`
 
-- Imputation of missing values using median or mode.
-- Outlier detection and handling.
-- Label standardization for target variable (Diagnosis).
-- Data normalization for scale-sensitive models.
+---
 
-### Model Evaluation
+### 3) Data Balancing
+Because of significant class imbalance (especially for rare subtypes):
 
-The `Model Evaluation (Only LightGBM) without class balancing.ipynb` notebook focuses on training and evaluating the **LightGBM** model without class balancing, while the `model-evaluation.ipynb` evaluates multiple classifiers (including RF, SVM, GBC, KNN, etc.) using cross-validation and hyperparameter tuning.
+- **Random Oversampling** is used to duplicate minority class samples  
+- **SMOTE was considered** but not used due to extremely low sample counts in some classes
 
-### Result Analysis and Visualization
+---
 
-The `Plots for Result Analysis.ipynb` notebook contains visualizations to analyze and compare the results of different models. The performance of each model is visualized using charts that display accuracy, F1-scores, and cross-validation results.
+### 4) Modeling
+Implemented in: `model-evaluation.ipynb`
+
+Models trained and evaluated:
+- Random Forest (RF)
+- Gradient Boosting Classifier (GBC)
+- Support Vector Machine (SVM)
+- K-Nearest Neighbors (KNN)
+- Decision Tree (DT)
+- LightGBM
+- Voting Classifier
+- Multi-layer Perceptron (MLP)
+
+---
+
+### 5) Model Evaluation
+Metrics used:
+- Accuracy
+- Precision (weighted)
+- Recall (weighted)
+- F1-score (weighted)
+- 5-Fold Cross-validation accuracy
+
+Cross-validation is applied to improve generalizability and reduce overfitting risk.
+
+---
+
+### 6) Result Analysis & Visualization
+Implemented in: `Plots_for_Result_Analysis.ipynb`
+
+Includes plots and comparisons across models, typically showing:
+- Accuracy per model
+- F1-score per model
+- Comparative performance visualization
+
+---
+
+## Repository Structure
+```text
+.
+├── Datasets/                         # Dataset files (raw/processed)
+├── Pictures/                         # Saved figures/plots (optional)
+├── Data Preprocessing All.ipynb      # Cleaning + preprocessing + balancing
+├── model-evaluation.ipynb            # Train + evaluate ML models (CV + metrics)
+├── Plots for Result Analysis.ipynb   # Result visualization
+└── README.md
